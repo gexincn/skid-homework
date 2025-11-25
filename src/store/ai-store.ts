@@ -23,6 +23,14 @@ export interface AiSource {
   enabled: boolean;
 }
 
+export type ImportAIModelModel = {
+  name: string;
+  model: string;
+  provider: AiProvider;
+  baseUrl?: string;
+  key?: string;
+};
+
 export interface AiClient {
   setSystemPrompt: (prompt: string) => void;
   sendMedia: (

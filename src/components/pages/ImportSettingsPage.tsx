@@ -18,8 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AiProvider, useAiStore } from "@/store/ai-store";
 
-// Type Definition
-type ImportAIModelModel = {
+export type ImportAIModelModel = {
   name: string;
   model: string;
   provider: AiProvider;

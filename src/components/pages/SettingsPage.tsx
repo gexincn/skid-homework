@@ -6,6 +6,8 @@ import {
   type AiModelSummary,
   type AiProvider,
   useAiStore,
+  AiSource,
+  ImportAIModelModel,
 } from "@/store/ai-store";
 import {
   useSettingsStore,
@@ -42,7 +44,7 @@ import {
   CommandItem,
   CommandList,
 } from "../ui/command";
-import { Check, ChevronsUpDown, Plus, Trash2 } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, Share2Icon, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useTheme } from "../theme-provider";
 import ShortcutRecorder from "../ShortcutRecorder";
@@ -360,6 +362,20 @@ export default function SettingsPage() {
     }
   };
 
+  const handleShareSource = (source: AiSource) => {
+    const json: ImportAIModelModel = {
+      name: source.name,
+      provider: source.provider,
+      baseUrl: source.baseUrl,
+      key: source.apiKey ?? undefined,
+      model: source.model,
+    };
+
+    // convert to url
+    const url = `${window.location.origin}/settings/import#${JSON.stringify(json)}`;
+    console.log(url);
+  };
+
   const qwenTooltipContent = (
     <span>
       {tCommon("qwen-callout.tooltip.prefix")}{" "}
@@ -443,6 +459,21 @@ export default function SettingsPage() {
                       />
                       {t("sources.enabled.toggle")}
                     </label>
+
+                    {/* Share button */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleShareSource(source);
+                      }}
+                      aria-label={t("sources.share.label")}
+                    >
+                      <Share2Icon className="h-4 w-4" />
+                    </Button>
+
+                    {/* Delete button */}
                     <Button
                       variant="ghost"
                       size="icon"

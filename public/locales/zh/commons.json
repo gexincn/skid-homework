@@ -263,6 +263,9 @@
         "label": "删除该源",
         "success": "已删除 {{name}}。",
         "error": "至少保留一个 AI 源。"
+      },
+      "share": {
+        "label": "分享该源"
       }
     },
     "appearance": {

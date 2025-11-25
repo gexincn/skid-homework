@@ -263,6 +263,9 @@
         "label": "Remove source",
         "success": "Removed {{name}}.",
         "error": "Keep at least one AI source."
+      },
+      "share": {
+        "label": "Share source"
       }
     },
     "appearance": {
