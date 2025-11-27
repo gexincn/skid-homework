@@ -204,7 +204,7 @@
     "selected": "Selected"
   },
   "qwen-callout": {
-    "title": "Official Qwen Max Service",
+    "title": "Official Qwen3 Service",
     "badge": "Free",
     "button": "Get token",
     "tooltip": {
@@ -385,7 +385,7 @@
       },
       "ui": {
         "title": "UI",
-        "show-qwen-hint": "Show Qwen Max service tip"
+        "show-qwen-hint": "Show Qwen3 service tip"
       }
     }
   },

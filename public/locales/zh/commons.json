@@ -204,7 +204,7 @@
     "selected": "已选择"
   },
   "qwen-callout": {
-    "title": "官方 Qwen Max 服务",
+    "title": "官方 Qwen3 服务",
     "badge": "免费",
     "button": "点击获取",
     "tooltip": {
@@ -385,7 +385,7 @@
       },
       "ui": {
         "title": "界面",
-        "show-qwen-hint": "显示 Qwen Max 服务提示"
+        "show-qwen-hint": "显示 Qwen3 服务提示"
       }
     }
   },

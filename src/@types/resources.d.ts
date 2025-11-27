@@ -179,7 +179,7 @@ interface Resources {
     "qwen-callout": {
       "badge": "Free",
       "button": "Get token",
-      "title": "Official Qwen Max Service",
+      "title": "Official Qwen3 Service",
       "tooltip": {
         "link": "Console -> Token Management",
         "prefix": "How to import into SkidHomework? Visit",
@@ -264,7 +264,7 @@ interface Resources {
         },
         "title": "Advanced Settings",
         "ui": {
-          "show-qwen-hint": "Show Qwen Max service tip",
+          "show-qwen-hint": "Show Qwen3 service tip",
           "title": "UI"
         }
       },
