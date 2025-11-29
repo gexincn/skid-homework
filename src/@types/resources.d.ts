@@ -410,6 +410,11 @@ interface Resources {
           "success": "Removed {{name}}."
         },
         "share": {
+          "dialog": {
+            "copy": "Copy",
+            "desc": "Scan the QR code or copy the link below. Treat this URL like a password.",
+            "title": "Share AI Source"
+          },
           "label": "Share source"
         },
         "title": "AI Sources"
