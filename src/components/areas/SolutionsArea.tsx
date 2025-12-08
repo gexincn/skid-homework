@@ -264,6 +264,7 @@ export default function SolutionsArea() {
       solutionIdx,
       res.improved_answer,
       res.improved_explanation,
+      res.improved_steps,
     );
   };
 

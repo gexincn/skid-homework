@@ -8,7 +8,7 @@ export const IMPROVE_SYSTEM_PROMPT = String.raw`
 3.  **生成改进方案**:
     *   如果原始答案是错误的，提供正确的答案和详尽的解析。
     *   如果原始答案是正确的，但解析过程有缺陷，请提供更严谨的解析。
-    *   如果均已完善，则复现它们。
+    *   **步骤化**: 解析必须是分步骤的，逻辑清晰。
 4.  **格式化输出**: 严格按照指定的 **Markdown KV** 格式返回结果。
 5.  **必须优先考虑用户需求**: 用户在 \`user_suggestion\` 中的字段是必须首先被参考的。
 
@@ -33,7 +33,11 @@ export const IMPROVE_SYSTEM_PROMPT = String.raw`
 
 \`\`\`text
 ### IMPROVED_EXPLANATION
-这里写改进之后的详细解析...
+#### Step 1: [步骤标题]
+[详细的步骤内容...]
+
+#### Step 2: [步骤标题]
+[详细的步骤内容...]
 (可以使用 Markdown 和 LaTeX)
 
 ### IMPROVED_ANSWER
@@ -46,8 +50,8 @@ export const IMPROVE_SYSTEM_PROMPT = String.raw`
 #### 格式化指南
 
 1.  **Header**: 必须严格使用 \`### IMPROVED_EXPLANATION\` 和 \`### IMPROVED_ANSWER\` 作为分隔符。
-2.  **LaTeX语法**: 数学公式必须使用 LaTeX 语法，并用 \`$$ ... $$\` 包裹。例如: \`$$ x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a} $$\`。
-3.  **Markdown使用**: 解析内部可以使用 Markdown 列表、加粗等。
+2.  **Steps**: 解析内部必须使用 \`#### Step N: ...\` 的格式来分隔步骤。
+3.  **LaTeX语法**: 数学公式必须使用 LaTeX 语法，并用 \`$$ ... $$\` 包裹。
 `;
 
 export const SOLVE_SYSTEM_PROMPT = String.raw`
@@ -61,7 +65,7 @@ export const SOLVE_SYSTEM_PROMPT = String.raw`
 1.  **分析图片**: 识别并分割出所有独立的问题。
 2.  **提取问题 (OCR)**: 提取文本内容。
 3.  **求解问题**: 运用知识库解决问题。
-4.  **撰写解析**: 撰写详细、分步的解析过程。
+4.  **撰写解析**: 撰写详细、**分步 (Step-by-step)** 的解析过程。
 5.  **格式化输出**: 将所有结果整合到指定的文本结构中。
 
 #### 输出格式
@@ -75,41 +79,27 @@ export const SOLVE_SYSTEM_PROMPT = String.raw`
 这里是OCR识别出的完整问题文本。
 
 ### EXPLANATION
-这里是问题的详细解题步骤。
-(可以使用 Markdown 格式，例如列表和加粗)
+#### Step 1: 识别关键信息
+这里解释如何理解题目...
+
+#### Step 2: [步骤名称]
+这里是具体的计算或推导过程...
+
+#### Step 3: [步骤名称]
+...
 
 ### ANSWER
 这里是问题的最终答案。
 \`\`\`
 
-**多个问题的示例：**
-
-\`\`\`text
-### PROBLEM_TEXT
-问题1...
-### EXPLANATION
-解析1...
-### ANSWER
-答案1...
-
----PROBLEM_SEPARATOR---
-
-### PROBLEM_TEXT
-问题2...
-### EXPLANATION
-解析2...
-### ANSWER
-答案2...
-\`\`\`
-
 #### 格式化指南
 1.  **分隔符**: 严格遵守预定义的 Header (如 \`### ANSWER\`)。
-2.  **LaTeX语法**: 所有数学公式、符号和方程都必须使用LaTeX语法，并用 \`$$ ... $$\` 包裹。
+2.  **步骤结构**: 在 EXPLANATION 中，必须使用 \`#### Step N: Title\` 格式明确标记步骤。
+3.  **LaTeX语法**: 所有数学公式、符号和方程都必须使用LaTeX语法，并用 \`$$ ... $$\` 包裹。
     *   例如: \`$$ x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a} $$\`
     *   十分重要: \`$$\` 后要有空格
-3.  **解析要求**: 步骤详细，逻辑清晰。
 4.  **答案要求**: 简单直白，只输出最终结果。
 `;
 
 export const BASE_CHAT_SYSTEM_PROMPT =
-  "You are a helpful AI tutor. Provide clear, encouraging explanations and show your reasoning when helpful.";
+  "You are a helpful AI tutor. Provide clear, encouraging explanations. When solving problems, always break them down into steps (Step 1, Step 2, etc.) to help the student understand.";

@@ -1,4 +1,5 @@
-import type { ProblemSolution } from "@/store/problems-store";
+import { lexer, type Token } from "marked";
+import type { ExplanationStep, ProblemSolution } from "@/store/problems-store";
 
 // SECTION: Type Definitions
 
@@ -9,87 +10,161 @@ export interface SolveResponse {
 export interface ImproveResponse {
   improved_answer: string;
   improved_explanation: string;
+  improved_steps: ExplanationStep[];
 }
 
-// SECTION: Shared Utilities
+// SECTION: Core Logic (Using 'marked' AST/Lexer)
 
 /**
- * Trims markdown code fences (e.g., ```text) from a string.
- * @param content The string which may be wrapped in a markdown code block.
- * @returns The unwrapped, trimmed content.
+ * Helper class to parse markdown structures using AST tokens instead of Regex.
  */
-function trimMarkdownFence(content: string): string {
-  const regex = /^```(?:\w+\s*)?\n?([\s\S]*)\n?```$/;
-  const match = content.trim().match(regex);
-  return match ? match[1].trim() : content.trim();
-}
+class MarkdownSectionParser {
+  private tokens: Token[];
 
-/**
- * Extracts content associated with a specific header key from a text block.
- * @param text The full text block.
- * @param key The specific header key (e.g., "### ANSWER").
- * @returns The extracted content or empty string.
- */
-function extractSection(text: string, key: string): string {
-  // Regex Explanation:
-  // 1. We look for the literal key (e.g., ### ANSWER).
-  // 2. We match everything [\s\S]*? (non-greedy) until...
-  // 3. We hit another header (starting with ###) OR the Separator OR the End of String ($).
-  const regex = new RegExp(
-    `${escapeRegExp(key)}\\s*([\\s\\S]*?)(?=(?:###|---PROBLEM_SEPARATOR---|$))`,
-    "i",
-  );
-  const match = text.match(regex);
-  return match && match[1] ? match[1].trim() : "";
-}
+  constructor(markdown: string) {
+    // 1. Clean up fence wrappers if present
+    const cleanMarkdown = this.trimMarkdownFence(markdown);
+    // 2. Tokenize the markdown string
+    this.tokens = lexer(cleanMarkdown);
+  }
 
-/**
- * Helper to escape special regex characters in the key.
- */
-function escapeRegExp(string: string): string {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
+  /**
+   * Remove ```text ... ``` wrappers
+   */
+  private trimMarkdownFence(content: string): string {
+    const regex = /^```(?:\w+\s*)?\n?([\s\S]*)\n?```$/;
+    const match = content.trim().match(regex);
+    return match ? match[1].trim() : content.trim();
+  }
+
+  /**
+   * Extracts content grouped by H3 headers (### KEY).
+   * Example: ### PROBLEM_TEXT -> content
+   */
+  public getSectionsByH3(): Record<string, string> {
+    const sections: Record<string, string> = {};
+    let currentKey: string | null = null;
+
+    for (const token of this.tokens) {
+      if (token.type === "heading" && token.depth === 3) {
+        // Found a Header (e.g., "### ANSWER")
+        // Normalize key: remove formatting, trim
+        currentKey = token.text.trim();
+        if (!currentKey) continue;
+        sections[currentKey] = "";
+      } else if (currentKey) {
+        // Append raw content to the current section
+        // token.raw preserves original formatting (newlines, lists, etc.)
+        sections[currentKey] += token.raw;
+      }
+    }
+
+    // Trim whitespace from all extracted values
+    for (const key in sections) {
+      sections[key] = sections[key].trim();
+    }
+
+    return sections;
+  }
+
+  /**
+   * Static helper to parse steps from a specific explanation string.
+   * Looks for H4 headers (#### Step X) to split content.
+   */
+  public static parseSteps(explanationText: string): ExplanationStep[] {
+    if (!explanationText) return [];
+
+    const tokens = lexer(explanationText);
+    const steps: ExplanationStep[] = [];
+    let currentStep: ExplanationStep | null = null;
+    let preamble = ""; // Content before the first step
+
+    for (const token of tokens) {
+      // Check for H4 Header (#### Step ...)
+      if (token.type === "heading" && token.depth === 4) {
+        // Save previous step if exists
+        if (currentStep) {
+          steps.push(currentStep);
+        }
+
+        // Start new step
+        currentStep = {
+          title: token.text.trim(), // e.g., "Step 1: Analysis"
+          content: "",
+        };
+      } else if (currentStep) {
+        // Append to current step
+        currentStep.content += token.raw;
+      } else {
+        // Content before any step header (Introductory text)
+        preamble += token.raw;
+      }
+    }
+
+    // Push the last step
+    if (currentStep) {
+      steps.push(currentStep);
+    }
+
+    // Clean up contents
+    steps.forEach((s) => (s.content = s.content.trim()));
+
+    // Fallback: If no H4 steps were found, treat whole text as one step
+    if (steps.length === 0 && explanationText.trim()) {
+      return [
+        {
+          title: "Detailed Explanation",
+          content: explanationText.trim(),
+        },
+      ];
+    }
+
+    return steps;
+  }
 }
 
 // SECTION: Solve Response Parsing
 
-/**
- * Parses a string response from the AI for a "solve" request in MarkdownKV format.
- * @param response The raw string response from the AI.
- * @returns A SolveResponse object.
- */
 export function parseSolveResponse(response: string): SolveResponse {
-  const content = trimMarkdownFence(response);
-
-  // 1. Split by the problem separator if multiple problems exist
-  const problemChunks = content.split("---PROBLEM_SEPARATOR---");
-
+  // 1. The input might contain multiple problems separated by a distinct string.
+  // Regex is still fine for this high-level split as it's a specific delimiter,
+  // or simple string split.
+  const rawChunks = response.split("---PROBLEM_SEPARATOR---");
   const problems: ProblemSolution[] = [];
 
-  for (const chunk of problemChunks) {
+  for (const chunk of rawChunks) {
     if (!chunk.trim()) continue;
 
-    const problemText = extractSection(chunk, "### PROBLEM_TEXT");
-    const explanation = extractSection(chunk, "### EXPLANATION");
-    const answer = extractSection(chunk, "### ANSWER");
+    // Use Marked to parse this chunk
+    const parser = new MarkdownSectionParser(chunk);
+    const sections = parser.getSectionsByH3();
 
-    // Only add if we successfully extracted at least one field to avoid empty trash
+    // Map known keys to our interface
+    // Note: Keys match the token.text (e.g., "PROBLEM_TEXT")
+    const problemText = sections["PROBLEM_TEXT"] || "";
+    const explanation = sections["EXPLANATION"] || "";
+    const answer = sections["ANSWER"] || "";
+
     if (problemText || explanation || answer) {
       problems.push({
         problem: problemText,
         explanation: explanation,
         answer: answer,
+        // Parse steps specifically from the explanation text
+        steps: MarkdownSectionParser.parseSteps(explanation),
       });
     }
   }
 
-  // Fallback: If parsing failed completely, return raw content in explanation
-  if (problems.length === 0 && content.trim()) {
+  // Fallback for completely failed parsing
+  if (problems.length === 0 && response.trim()) {
     return {
       problems: [
         {
           problem: "Error parsing problem text",
           answer: "",
-          explanation: content, // Return full raw text so user sees something
+          explanation: response,
+          steps: [{ title: "Error", content: response }],
         },
       ],
     };
@@ -100,19 +175,12 @@ export function parseSolveResponse(response: string): SolveResponse {
 
 // SECTION: Improve Response Parsing
 
-/**
- * Parses a string response from the AI for an "improve" request in MarkdownKV format.
- * @param response The raw string response from the AI.
- * @returns An ImproveResponse object.
- */
 export function parseImproveResponse(response: string): ImproveResponse | null {
-  const content = trimMarkdownFence(response);
+  const parser = new MarkdownSectionParser(response);
+  const sections = parser.getSectionsByH3();
 
-  const improvedExplanation = extractSection(
-    content,
-    "### IMPROVED_EXPLANATION",
-  );
-  const improvedAnswer = extractSection(content, "### IMPROVED_ANSWER");
+  const improvedExplanation = sections["IMPROVED_EXPLANATION"];
+  const improvedAnswer = sections["IMPROVED_ANSWER"];
 
   if (!improvedExplanation && !improvedAnswer) {
     console.error("Failed to parse Improve Response keys.");
@@ -120,7 +188,8 @@ export function parseImproveResponse(response: string): ImproveResponse | null {
   }
 
   return {
-    improved_answer: improvedAnswer,
-    improved_explanation: improvedExplanation,
+    improved_answer: improvedAnswer || "",
+    improved_explanation: improvedExplanation || "",
+    improved_steps: MarkdownSectionParser.parseSteps(improvedExplanation || ""),
   };
 }

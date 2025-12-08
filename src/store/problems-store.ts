@@ -21,12 +21,17 @@ export type Solution = {
   aiSourceId?: string; // Identifier of the AI source that produced the solution
 };
 
-// Type definition for a single problem-answer pair.
-export type ProblemSolution = {
+export interface ExplanationStep {
+  title: string;
+  content: string;
+}
+
+export interface ProblemSolution {
   problem: string;
   answer: string;
-  explanation: string;
-};
+  explanation: string; // The full raw markdown
+  steps: ExplanationStep[]; // Parsed steps
+}
 
 // The interface for our store's state and actions.
 export interface ProblemsState {
@@ -51,6 +56,7 @@ export interface ProblemsState {
     problemIndex: number,
     newAnswer: string,
     newExplanation: string,
+    newSteps: ExplanationStep[],
   ) => void;
   clearAllItems: () => void;
 
@@ -119,7 +125,13 @@ export const useProblemsStore = create<ProblemsState>((set) => ({
   /**
    * Updates a specific problem within a solution.
    */
-  updateProblem: (imageUrl, problemIndex, newAnswer, newExplanation) =>
+  updateProblem: (
+    imageUrl,
+    problemIndex,
+    newAnswer,
+    newExplanation,
+    newSteps,
+  ) =>
     set((state) => {
       const currentSolution = state.imageSolutions.get(imageUrl);
       if (!currentSolution) {
@@ -131,6 +143,7 @@ export const useProblemsStore = create<ProblemsState>((set) => ({
         ...updatedProblems[problemIndex],
         answer: newAnswer,
         explanation: newExplanation,
+        steps: newSteps,
       };
 
       const newSolutionsMap = new Map(state.imageSolutions);

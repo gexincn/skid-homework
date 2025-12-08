@@ -386,6 +386,7 @@ ${traits}
               explanation: t("errors.processing-failed.explanation", {
                 error: String(err),
               }),
+              steps: [],
             };
 
             updateSolution(itemsToProcess[i].url, {
