@@ -46,7 +46,7 @@
 }
 
 :root {
-  --safe-top: max(env(safe-area-inset-top, 0px), 12px);
+  --safe-top: max(env(safe-area-inset-top, 0px), 0px);
   color-scheme: light;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
