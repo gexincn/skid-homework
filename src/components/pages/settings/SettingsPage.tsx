@@ -16,7 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useHotkeys } from "react-hotkeys-hook";
 import {
   Card,
@@ -55,14 +55,18 @@ export const DEFAULT_BASE_BY_PROVIDER: Record<AiProvider, string> = {
   openai: DEFAULT_OPENAI_BASE_URL,
 };
 
-function BackButton() {
+type BackButtonProps = {
+  href?: string | null;
+};
+
+function BackButton({ href }: BackButtonProps) {
   const { t } = useTranslation("commons", {
     keyPrefix: "settings-page",
   });
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row">
-      <Link href="/" className="w-full sm:flex-1">
+      <Link href={href ?? "/"} className="w-full sm:flex-1">
         <Button className="w-full">
           {t("back")} <Kbd>ESC</Kbd>
         </Button>
@@ -75,6 +79,10 @@ export default function SettingsPage() {
   const { t, i18n } = useTranslation("commons", {
     keyPrefix: "settings-page",
   });
+
+  const searchParams = useSearchParams();
+
+  const navTargetPath = searchParams.get("from");
 
   const sources = useAiStore((s) => s.sources);
   const activeSourceId = useAiStore((s) => s.activeSourceId);
@@ -119,8 +127,12 @@ export default function SettingsPage() {
 
   const router = useRouter();
   const handleBack = useCallback(() => {
-    router.push("/");
-  }, [router]);
+    if (navTargetPath) {
+      router.push(navTargetPath);
+    } else {
+      router.push("/");
+    }
+  }, [router, navTargetPath]);
   useHotkeys("esc", handleBack);
 
   useEffect(() => {
@@ -302,7 +314,7 @@ export default function SettingsPage() {
       <div className="mx-auto max-w-3xl space-y-8 p-4 md:p-8">
         <h1 className="text-2xl font-bold tracking-tight">{t("heading")}</h1>
 
-        <BackButton />
+        <BackButton href={navTargetPath} />
 
         <AISourceManager />
 
@@ -578,7 +590,7 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        <BackButton />
+        <BackButton href={navTargetPath} />
       </div>
     </>
   );
