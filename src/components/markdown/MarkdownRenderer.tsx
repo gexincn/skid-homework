@@ -73,7 +73,7 @@ const CodeBlock = ({
   const isPlot = lang.startsWith("plot-");
   const isSvg =
     (lang === "svg" || lang === "xml") && content.startsWith("<svg");
-  const isJessecode = lang === "jessecode";
+  const isJessecode = lang === "jessecode" || lang === "jsxgraph";
 
   // Handle incomplete blocks early to reduce nesting
   if ((isPlot || isSvg || isJessecode) && !isBlockComplete) {
