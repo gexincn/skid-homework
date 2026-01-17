@@ -78,9 +78,9 @@ Skid-Homework 不会要求你下载桌面软件, 一切东西都在浏览器内�
 
 ### 画图工具支持情况
 
-- [JSXGraph](https://github.com/jsxgraph/jsxgraph)
+- [JSXGraph](https://github.com/jsxgraph/jsxgraph) (unstable)
 - [Mermaid](https://mermaid.js.org/)
-- [function-plot](https://github.com/mauriciopoppe/function-plot) (弃用, 但仍然可以生成)
+- [function-plot](https://github.com/mauriciopoppe/function-plot) (逐步弃用, 后续将替换为 JSXGraph)
 - [SVG](https://www.w3.org/Graphics/SVG/)
 
 ### 为什么如此之慢
